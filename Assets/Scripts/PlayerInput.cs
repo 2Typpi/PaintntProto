@@ -152,7 +152,7 @@ public class @PlayerActions : IInputActionCollection, IDisposable
                     ""name"": """",
                     ""id"": ""820de525-fcb3-4703-adec-3d5c377fc1a8"",
                     ""path"": ""<Keyboard>/ctrl"",
-                    ""interactions"": ""Hold"",
+                    ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""Crouch"",

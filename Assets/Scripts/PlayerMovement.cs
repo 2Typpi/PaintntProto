@@ -43,7 +43,7 @@ public class PlayerMovement : MonoBehaviour {
     Vector2 lookInput;
     Vector2 movementInput;
     float x, y;
-    bool jumping, sprinting, crouching = false;
+    bool jumping, sprinting, crouching, cancelCrouching = false;
     
     //Sliding
     private Vector3 normalVector = Vector3.up;
@@ -67,7 +67,9 @@ public class PlayerMovement : MonoBehaviour {
         playerActions.PlayerControls.Mouse.performed += lookContext => lookInput = lookContext.ReadValue<Vector2>();
         playerActions.PlayerControls.Jump.performed += jumpContext => jumping = true;
         playerActions.PlayerControls.Sprint.performed += sprintContext => sprinting = true;
+        playerActions.PlayerControls.Sprint.canceled += sprintContext => sprinting = true;
         playerActions.PlayerControls.Crouch.performed += jumpContext => crouching = true;
+        playerActions.PlayerControls.Crouch.canceled += jumpContext => cancelCrouching = true;
     }
     
     void Start() {
@@ -92,15 +94,13 @@ public class PlayerMovement : MonoBehaviour {
     private void MyInput() {
         x = movementInput.x;
         y = movementInput.y;
-      
+
         //Crouching
-        /*
-        if (crouching) { 
-            StartCrouch();
-        } else {
-            StopCrouch();
-        }
-        crouching = false;*/
+        if (crouching) StartCrouch();
+        if (cancelCrouching) StopCrouch();
+
+        crouching = false;
+        cancelCrouching = false;
     }
 
     private void StartCrouch() {
@@ -130,7 +130,8 @@ public class PlayerMovement : MonoBehaviour {
         CounterMovement(x, y, mag);
         
         //If holding jump && ready to jump, then jump
-        if (readyToJump && jumping) Jump();
+        if (jumping) Jump();
+        jumping = false;
 
         //Set max speed
         float maxSpeed = this.maxSpeed;
@@ -169,8 +170,7 @@ public class PlayerMovement : MonoBehaviour {
             readyToJump = false;
 
             //Add jump forces
-            rb.AddForce(Vector2.up * jumpForce * 1.5f);
-            rb.AddForce(normalVector * jumpForce * 0.5f);
+            rb.AddForce(Vector3.up * jumpForce * 2f);
             
             //If jumping while falling, reset y velocity.
             Vector3 vel = rb.velocity;
@@ -181,7 +181,6 @@ public class PlayerMovement : MonoBehaviour {
             
             Invoke(nameof(ResetJump), jumpCooldown);
         }
-        jumping = false;
     }
     
     private void ResetJump() {
