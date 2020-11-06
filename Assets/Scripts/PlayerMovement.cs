@@ -2,12 +2,16 @@
 
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerMovement : MonoBehaviour {
 
     //Assingables
     public Transform playerCam;
     public Transform orientation;
+
+    public GameObject DeathCanvas;
+    public Text UIText;
     
     //Other
     private Rigidbody rb;
@@ -49,6 +53,9 @@ public class PlayerMovement : MonoBehaviour {
     private Vector3 normalVector = Vector3.up;
     private Vector3 wallNormalVector;
 
+    //Death 
+    private bool isDead = false;
+
     private void OnEnable()
     {
         playerActions.Enable();
@@ -86,6 +93,12 @@ public class PlayerMovement : MonoBehaviour {
     private void Update() {
         MyInput();
         Look();
+
+        if(jumping && isDead)
+        {
+            isDead = false;
+            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
+        }
     }
 
     /// <summary>
@@ -287,5 +300,20 @@ public class PlayerMovement : MonoBehaviour {
     private void StopGrounded() {
         grounded = false;
     }
-    
+
+
+
+
+
+    // Player Collision
+
+    private void OnTriggerEnter(Collider other)
+    {
+        DeathCanvas.SetActive(true);
+        isDead = true;
+        if (other.name == "Win")
+        {
+            UIText.text = "You won!";
+        }
+    }
 }
