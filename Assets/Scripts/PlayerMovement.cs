@@ -54,8 +54,55 @@ public class PlayerMovement : MonoBehaviour {
     private Vector3 normalVector = Vector3.up;
     private Vector3 wallNormalVector;
 
+    //Wallrunning
+    public LayerMask whatIsWall;
+    public float wallrunForce, maxWallrunTime, maxWallrunSpeed;
+    bool isWallRight, isWallLeft;
+    bool isWallrunning;
+    public float maxWallrunCameraTilt, wallRunCameraTilt;
+
     //Death 
     private bool isDead = false;
+
+    private void WallrunInput()
+    {
+        if (x > 0 && isWallRight) StartWallrun();
+        if (x < 0 && isWallLeft) StartWallrun();
+    }
+
+    private void StartWallrun()
+    {
+        rb.useGravity = false;
+        isWallrunning = true;
+
+        //Check for maxSpeed
+        if (rb.velocity.magnitude <= maxWallrunSpeed)
+        {
+            rb.AddForce(orientation.forward * wallrunForce * Time.deltaTime);
+
+            //Make Character Stick to the wall
+            if (isWallRight)
+                rb.AddForce(orientation.right * wallrunForce / 5 * Time.deltaTime);
+            else
+                rb.AddForce(-orientation.right * wallrunForce / 5 * Time.deltaTime);
+        }
+    }
+
+    private void StopWallrun()
+    {
+        rb.useGravity = true;
+        isWallrunning = false;
+    }
+
+    private void CheckForWall()
+    {
+        isWallRight = Physics.Raycast(transform.position, orientation.right, 1f, whatIsWall);
+        //-orientation.right = orientation.left
+        isWallLeft = Physics.Raycast(transform.position, -orientation.right, 1f, whatIsWall);
+
+        //leave wallrun
+        if (!isWallLeft && !isWallRight) StopWallrun();
+    }
 
     private void OnEnable()
     {
@@ -94,6 +141,8 @@ public class PlayerMovement : MonoBehaviour {
     private void Update() {
         MyInput();
         Look();
+        CheckForWall();
+        WallrunInput();
 
         if(jumping && isDead)
         {
@@ -190,7 +239,8 @@ public class PlayerMovement : MonoBehaviour {
             readyToJump = false;
 
             //Add jump forces
-            rb.AddForce(Vector3.up * jumpForce * 2f);
+            rb.AddForce(Vector3.up * jumpForce * 1.5f);
+            rb.AddForce(normalVector * jumpForce * 0.5f);
             
             //If jumping while falling, reset y velocity.
             Vector3 vel = rb.velocity;
@@ -199,6 +249,24 @@ public class PlayerMovement : MonoBehaviour {
             else if (rb.velocity.y > 0) 
                 rb.velocity = new Vector3(vel.x, vel.y / 2, vel.z);
             
+            Invoke(nameof(ResetJump), jumpCooldown);
+        }
+
+        //Walljump
+        if (isWallrunning)
+        {
+            readyToJump = false;
+
+            //sidewards wallhop
+            if (isWallRight) rb.AddForce(-orientation.right * jumpForce * 2.5f);
+            if (isWallLeft) rb.AddForce(orientation.right * jumpForce * 2.5f);
+
+            rb.AddForce(Vector3.up * jumpForce * 1.5f);
+            rb.AddForce(normalVector * jumpForce * 0.5f);
+
+            //Always add Force forward
+            rb.AddForce(orientation.forward * jumpForce * 1f);
+
             Invoke(nameof(ResetJump), jumpCooldown);
         }
     }
@@ -221,8 +289,21 @@ public class PlayerMovement : MonoBehaviour {
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
 
         //Perform the rotations
-        playerCam.transform.localRotation = Quaternion.Euler(xRotation, desiredX, 0);
+        playerCam.transform.localRotation = Quaternion.Euler(xRotation, desiredX, wallRunCameraTilt);
         orientation.transform.localRotation = Quaternion.Euler(0, desiredX, 0);
+
+        //While Wallrunning
+        //Tilts camera in .5 seconds
+        if (Math.Abs(wallRunCameraTilt) < maxWallrunCameraTilt && isWallrunning && isWallRight)
+            wallRunCameraTilt += maxWallrunCameraTilt * 2 * Time.deltaTime;
+        if (Math.Abs(wallRunCameraTilt) < maxWallrunCameraTilt && isWallrunning && isWallLeft)
+            wallRunCameraTilt -= maxWallrunCameraTilt * 2 * Time.deltaTime;
+    
+        //Tilts camera back again
+        if (wallRunCameraTilt > 0 && !isWallRight && !isWallLeft)
+            wallRunCameraTilt -= maxWallrunCameraTilt * 2 * Time.deltaTime;
+        if (wallRunCameraTilt < 0 && !isWallRight && !isWallLeft)
+            wallRunCameraTilt += maxWallrunCameraTilt * 2 * Time.deltaTime;
     }
 
     private void CounterMovement(float x, float y, Vector2 mag) {
