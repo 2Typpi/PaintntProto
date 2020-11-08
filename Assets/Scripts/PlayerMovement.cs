@@ -23,31 +23,32 @@ public class PlayerMovement : MonoBehaviour {
     
     //Movement
     public float moveSpeed = 3000;
-    public float maxSpeed = 10;
+    public float maxSpeed = 15;
+    public float walkSpeed = 5;
     public bool grounded;
     public LayerMask whatIsGround;
     
     public float counterMovement = 0.175f;
     private float threshold = 0.01f;
-    public float maxSlopeAngle = 35f;
+    public float maxSlopeAngle = 70f;
 
     //Crouch & Slide
     private Vector3 crouchScale = new Vector3(1, 0.5f, 1);
     private Vector3 playerScale;
-    public float slideForce = 400;
-    public float slideCounterMovement = 0.2f;
+    public float slideForce = 500;
+    public float slideCounterMovement = 0.4f;
 
     //Jumping
     private bool readyToJump = true;
     private float jumpCooldown = 0.25f;
-    public float jumpForce = 550f;
+    public float jumpForce = 500f;
 
     //Input
     PlayerActions playerActions;
     Vector2 lookInput;
     Vector2 movementInput;
     float x, y;
-    bool jumping, sprinting, crouching, cancelCrouching = false;
+    bool jumping, walking, crouching, cancelCrouching = false;
     
     //Sliding
     private Vector3 normalVector = Vector3.up;
@@ -73,10 +74,10 @@ public class PlayerMovement : MonoBehaviour {
         playerActions.PlayerControls.Movement.performed += context => movementInput = context.ReadValue<Vector2>();
         playerActions.PlayerControls.Mouse.performed += lookContext => lookInput = lookContext.ReadValue<Vector2>();
         playerActions.PlayerControls.Jump.performed += jumpContext => jumping = true;
-        playerActions.PlayerControls.Sprint.performed += sprintContext => sprinting = true;
-        playerActions.PlayerControls.Sprint.canceled += sprintContext => sprinting = true;
-        playerActions.PlayerControls.Crouch.performed += jumpContext => crouching = true;
-        playerActions.PlayerControls.Crouch.canceled += jumpContext => cancelCrouching = true;
+        playerActions.PlayerControls.Sprint.performed += sprintContext => walking = true;
+        playerActions.PlayerControls.Sprint.canceled += sprintContext => walking = false;
+        playerActions.PlayerControls.Crouch.performed += crouchContext => crouching = true;
+        playerActions.PlayerControls.Crouch.canceled += crouchContext => cancelCrouching = true;
     }
     
     void Start() {
@@ -145,12 +146,16 @@ public class PlayerMovement : MonoBehaviour {
         //If holding jump && ready to jump, then jump
         if (jumping) Jump();
         jumping = false;
+        float maxSpeed;
 
         //Set max speed
-        float maxSpeed = this.maxSpeed;
-        
+        if (walking)
+            maxSpeed = this.walkSpeed;
+        else
+            maxSpeed = this.maxSpeed;
+
         //If sliding down a ramp, add force down so player stays grounded and also builds speed
-        if (crouching && grounded && readyToJump) {
+        if (transform.localScale == crouchScale && grounded && readyToJump) {
             rb.AddForce(Vector3.down * Time.deltaTime * 3000);
             return;
         }
@@ -171,11 +176,13 @@ public class PlayerMovement : MonoBehaviour {
         }
         
         // Movement while sliding
-        if (grounded && crouching) multiplierV = 0f;
+        if (grounded && transform.localScale == crouchScale) multiplierV = 0f;
 
         //Apply forces to move player
         rb.AddForce(orientation.transform.forward * y * moveSpeed * Time.deltaTime * multiplier * multiplierV);
         rb.AddForce(orientation.transform.right * x * moveSpeed * Time.deltaTime * multiplier);
+
+        Debug.Log(rb.velocity.magnitude);
     }
 
     private void Jump() {
@@ -222,7 +229,7 @@ public class PlayerMovement : MonoBehaviour {
         if (!grounded || jumping) return;
 
         //Slow down sliding
-        if (crouching) {
+        if (transform.localScale == crouchScale) {
             rb.AddForce(moveSpeed * Time.deltaTime * -rb.velocity.normalized * slideCounterMovement);
             return;
         }
