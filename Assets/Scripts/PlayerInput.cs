@@ -57,6 +57,14 @@ public class @PlayerActions : IInputActionCollection, IDisposable
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Restart"",
+                    ""type"": ""Button"",
+                    ""id"": ""ba8f5ba6-7ea6-425e-b2a7-e4e21409526f"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -158,6 +166,17 @@ public class @PlayerActions : IInputActionCollection, IDisposable
                     ""action"": ""Crouch"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""152aa7d1-d4e5-46f2-bb02-c0a1320b240c"",
+                    ""path"": ""<Keyboard>/r"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Restart"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -171,6 +190,7 @@ public class @PlayerActions : IInputActionCollection, IDisposable
         m_PlayerControls_Mouse = m_PlayerControls.FindAction("Mouse", throwIfNotFound: true);
         m_PlayerControls_Sprint = m_PlayerControls.FindAction("Sprint", throwIfNotFound: true);
         m_PlayerControls_Crouch = m_PlayerControls.FindAction("Crouch", throwIfNotFound: true);
+        m_PlayerControls_Restart = m_PlayerControls.FindAction("Restart", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -225,6 +245,7 @@ public class @PlayerActions : IInputActionCollection, IDisposable
     private readonly InputAction m_PlayerControls_Mouse;
     private readonly InputAction m_PlayerControls_Sprint;
     private readonly InputAction m_PlayerControls_Crouch;
+    private readonly InputAction m_PlayerControls_Restart;
     public struct PlayerControlsActions
     {
         private @PlayerActions m_Wrapper;
@@ -234,6 +255,7 @@ public class @PlayerActions : IInputActionCollection, IDisposable
         public InputAction @Mouse => m_Wrapper.m_PlayerControls_Mouse;
         public InputAction @Sprint => m_Wrapper.m_PlayerControls_Sprint;
         public InputAction @Crouch => m_Wrapper.m_PlayerControls_Crouch;
+        public InputAction @Restart => m_Wrapper.m_PlayerControls_Restart;
         public InputActionMap Get() { return m_Wrapper.m_PlayerControls; }
         public void Enable() { Get().Enable(); }
         public void Disable() { Get().Disable(); }
@@ -258,6 +280,9 @@ public class @PlayerActions : IInputActionCollection, IDisposable
                 @Crouch.started -= m_Wrapper.m_PlayerControlsActionsCallbackInterface.OnCrouch;
                 @Crouch.performed -= m_Wrapper.m_PlayerControlsActionsCallbackInterface.OnCrouch;
                 @Crouch.canceled -= m_Wrapper.m_PlayerControlsActionsCallbackInterface.OnCrouch;
+                @Restart.started -= m_Wrapper.m_PlayerControlsActionsCallbackInterface.OnRestart;
+                @Restart.performed -= m_Wrapper.m_PlayerControlsActionsCallbackInterface.OnRestart;
+                @Restart.canceled -= m_Wrapper.m_PlayerControlsActionsCallbackInterface.OnRestart;
             }
             m_Wrapper.m_PlayerControlsActionsCallbackInterface = instance;
             if (instance != null)
@@ -277,6 +302,9 @@ public class @PlayerActions : IInputActionCollection, IDisposable
                 @Crouch.started += instance.OnCrouch;
                 @Crouch.performed += instance.OnCrouch;
                 @Crouch.canceled += instance.OnCrouch;
+                @Restart.started += instance.OnRestart;
+                @Restart.performed += instance.OnRestart;
+                @Restart.canceled += instance.OnRestart;
             }
         }
     }
@@ -288,5 +316,6 @@ public class @PlayerActions : IInputActionCollection, IDisposable
         void OnMouse(InputAction.CallbackContext context);
         void OnSprint(InputAction.CallbackContext context);
         void OnCrouch(InputAction.CallbackContext context);
+        void OnRestart(InputAction.CallbackContext context);
     }
 }

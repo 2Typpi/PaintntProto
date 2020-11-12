@@ -61,7 +61,8 @@ public class PlayerMovement : MonoBehaviour {
     bool isWallrunning;
     public float maxWallrunCameraTilt, wallRunCameraTilt;
 
-    //Death 
+    //Death & Restart
+    private bool restart = false;
     private bool isDead = false;
 
     private void WallrunInput()
@@ -125,6 +126,7 @@ public class PlayerMovement : MonoBehaviour {
         playerActions.PlayerControls.Sprint.canceled += sprintContext => walking = false;
         playerActions.PlayerControls.Crouch.performed += crouchContext => crouching = true;
         playerActions.PlayerControls.Crouch.canceled += crouchContext => cancelCrouching = true;
+        playerActions.PlayerControls.Restart.performed += restartContext => restart = true;
     }
     
     void Start() {
@@ -144,9 +146,10 @@ public class PlayerMovement : MonoBehaviour {
         CheckForWall();
         WallrunInput();
 
-        if(jumping && isDead)
+        if((jumping && isDead) || restart)
         {
             isDead = false;
+            restart = false;
             UnityEngine.SceneManagement.SceneManager.LoadScene(0);
         }
     }
