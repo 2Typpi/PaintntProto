@@ -60,6 +60,7 @@ public class PlayerMovement : MonoBehaviour {
     bool isWallRight, isWallLeft;
     bool isWallrunning;
     public float maxWallrunCameraTilt, wallRunCameraTilt;
+    float timer;
 
     //Death & Restart
     private bool restart = false;
@@ -93,6 +94,7 @@ public class PlayerMovement : MonoBehaviour {
     {
         rb.useGravity = true;
         isWallrunning = false;
+        timer = 0.0f;
     }
 
     private void CheckForWall()
@@ -230,6 +232,14 @@ public class PlayerMovement : MonoBehaviour {
         // Movement while sliding
         if (grounded && transform.localScale == crouchScale) multiplierV = 0f;
 
+        if (isWallrunning) {
+            timer += Time.deltaTime;
+            int secondsWallrunning = Convert.ToInt32(timer % 60);
+            if (secondsWallrunning > maxWallrunTime) {
+                StopWallrun();
+            }
+        }
+
         //Apply forces to move player
         rb.AddForce(orientation.transform.forward * y * moveSpeed * Time.deltaTime * multiplier * multiplierV);
         rb.AddForce(orientation.transform.right * x * moveSpeed * Time.deltaTime * multiplier);
@@ -261,8 +271,8 @@ public class PlayerMovement : MonoBehaviour {
             readyToJump = false;
 
             //sidewards wallhop
-            if (isWallRight) rb.AddForce(-orientation.right * jumpForce * 2.5f);
-            if (isWallLeft) rb.AddForce(orientation.right * jumpForce * 2.5f);
+            if (isWallRight) rb.AddForce(-orientation.right * jumpForce * 0.5f);
+            if (isWallLeft) rb.AddForce(orientation.right * jumpForce * 0.5f);
 
             rb.AddForce(Vector3.up * jumpForce * 1.5f);
             rb.AddForce(normalVector * jumpForce * 0.5f);
