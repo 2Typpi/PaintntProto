@@ -278,7 +278,7 @@ public class PlayerMovement : MonoBehaviour {
             rb.AddForce(normalVector * jumpForce * 0.5f);
 
             //Always add Force forward
-            rb.AddForce(orientation.forward * jumpForce * 1f);
+            rb.AddForce(orientation.forward * jumpForce * 0.5f);
 
             Invoke(nameof(ResetJump), jumpCooldown);
         }
