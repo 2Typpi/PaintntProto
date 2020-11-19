@@ -271,8 +271,8 @@ public class PlayerMovement : MonoBehaviour {
             readyToJump = false;
 
             //sidewards wallhop
-            if (isWallRight) rb.AddForce(-orientation.right * jumpForce * 0.5f);
-            if (isWallLeft) rb.AddForce(orientation.right * jumpForce * 0.5f);
+            if (isWallRight) rb.AddForce(-orientation.right * jumpForce * 0.8f);
+            if (isWallLeft) rb.AddForce(orientation.right * jumpForce * 0.8f);
 
             rb.AddForce(Vector3.up * jumpForce * 1.5f);
             rb.AddForce(normalVector * jumpForce * 0.5f);
@@ -299,10 +299,10 @@ public class PlayerMovement : MonoBehaviour {
         
         //Rotate, and also make sure we dont over- or under-rotate.
         xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+        xRotation = Mathf.Clamp(xRotation, -90f, 70f);
 
         //Perform the rotations
-        playerCam.transform.localRotation = Quaternion.Euler(xRotation, desiredX, wallRunCameraTilt);
+        playerCam.transform.localRotation = Quaternion.Euler(xRotation, 0, wallRunCameraTilt);
         orientation.transform.localRotation = Quaternion.Euler(0, desiredX, 0);
 
         //While Wallrunning
