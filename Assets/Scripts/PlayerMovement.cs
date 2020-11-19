@@ -12,6 +12,7 @@ public class PlayerMovement : MonoBehaviour {
 
     public GameObject DeathCanvas;
     public Text UIText;
+    public Animator animator;
     
     //Other
     private Rigidbody rb;
@@ -147,6 +148,7 @@ public class PlayerMovement : MonoBehaviour {
         Look();
         CheckForWall();
         WallrunInput();
+        Animate();
 
         if((jumping && isDead) || restart)
         {
@@ -171,9 +173,18 @@ public class PlayerMovement : MonoBehaviour {
         cancelCrouching = false;
     }
 
+    private void Animate() {
+        if(movementInput.magnitude > 0.2) {
+            animator.SetBool("isRunning", true);
+        }
+        else {
+            animator.SetBool("isRunning", false);
+        }
+    }
+
     private void StartCrouch() {
         transform.localScale = crouchScale;
-        transform.position = new Vector3(transform.position.x, transform.position.y - 0.5f, transform.position.z);
+        transform.position = new Vector3(transform.position.x, transform.position.y + 0.5f, transform.position.z);
         if (rb.velocity.magnitude > 0.5f) {
             if (grounded) {
                 rb.AddForce(orientation.transform.forward * slideForce);
@@ -183,7 +194,7 @@ public class PlayerMovement : MonoBehaviour {
 
     private void StopCrouch() {
         transform.localScale = playerScale;
-        transform.position = new Vector3(transform.position.x, transform.position.y + 0.5f, transform.position.z);
+        transform.position = new Vector3(transform.position.x, transform.position.y - 0.5f, transform.position.z);
     }
 
     private void Movement() {
@@ -263,6 +274,11 @@ public class PlayerMovement : MonoBehaviour {
                 rb.velocity = new Vector3(vel.x, vel.y / 2, vel.z);
             
             Invoke(nameof(ResetJump), jumpCooldown);
+            if(movementInput.magnitude > 0.2) {
+                animator.SetTrigger("triggerRunningJump");
+            } else {
+                animator.SetTrigger("triggerJump");
+            }
         }
 
         //Walljump
@@ -294,16 +310,18 @@ public class PlayerMovement : MonoBehaviour {
         float mouseY = lookInput.y * sensitivity * Time.fixedDeltaTime * sensMultiplier;
 
         //Find current look rotation
-        Vector3 rot = playerCam.transform.localRotation.eulerAngles;
+        Vector3 rot = orientation.transform.localRotation.eulerAngles;
         desiredX = rot.y + mouseX;
         
         //Rotate, and also make sure we dont over- or under-rotate.
         xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -90f, 70f);
-
+        xRotation = Mathf.Clamp(xRotation, -80f, 75f);
+        mouseY = Mathf.Clamp(mouseY,-35,60);
+        
         //Perform the rotations
-        playerCam.transform.localRotation = Quaternion.Euler(xRotation, 0, wallRunCameraTilt);
-        orientation.transform.localRotation = Quaternion.Euler(0, desiredX, 0);
+        transform.LookAt(playerCam);
+        playerCam.transform.localRotation = Quaternion.Euler(xRotation, 0,wallRunCameraTilt);
+        orientation.transform.localRotation = Quaternion.Euler(0,desiredX,0);
 
         //While Wallrunning
         //Tilts camera in .5 seconds
