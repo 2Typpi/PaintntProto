@@ -15,6 +15,7 @@ public class PlayerMovement : MonoBehaviour {
     
     //Other
     private Rigidbody rb;
+    private CapsuleCollider col;
 
     //Rotation and look
     private float xRotation;
@@ -119,6 +120,7 @@ public class PlayerMovement : MonoBehaviour {
 
     void Awake() {
         rb = GetComponent<Rigidbody>();
+        col = GetComponent<CapsuleCollider>();
 
         playerActions = new PlayerActions();
         playerActions.PlayerControls.Movement.performed += context => movementInput = context.ReadValue<Vector2>();
@@ -145,6 +147,7 @@ public class PlayerMovement : MonoBehaviour {
     private void Update() {
         MyInput();
         Look();
+        isGrounded();
         CheckForWall();
         WallrunInput();
 
@@ -243,8 +246,6 @@ public class PlayerMovement : MonoBehaviour {
         //Apply forces to move player
         rb.AddForce(orientation.transform.forward * y * moveSpeed * Time.deltaTime * multiplier * multiplierV);
         rb.AddForce(orientation.transform.right * x * moveSpeed * Time.deltaTime * multiplier);
-
-        Debug.Log(rb.velocity.magnitude);
     }
 
     private void Jump() {
@@ -363,51 +364,16 @@ public class PlayerMovement : MonoBehaviour {
         return new Vector2(xMag, yMag);
     }
 
-    private bool IsFloor(Vector3 v) {
-        float angle = Vector3.Angle(Vector3.up, v);
-        return angle < maxSlopeAngle;
+    private void isGrounded()
+    {
+        float sphereRadius = 0.5f;
+        float castDistance = 1f;
+        // Cast a sphere fownwards to detect if there is something underneath the player with layer gorund
+        RaycastHit hit;
+        grounded = Physics.SphereCast(this.transform.position + col.center, sphereRadius, Vector3.down, out hit, castDistance, whatIsGround);
     }
-
-    private bool cancellingGrounded;
-    
-    /// <summary>
-    /// Handle ground detection
-    /// </summary>
-    private void OnCollisionStay(Collision other) {
-        //Make sure we are only checking for walkable layers
-        int layer = other.gameObject.layer;
-        if (whatIsGround != (whatIsGround | (1 << layer))) return;
-
-        //Iterate through every collision in a physics update
-        for (int i = 0; i < other.contactCount; i++) {
-            Vector3 normal = other.contacts[i].normal;
-            //FLOOR
-            if (IsFloor(normal)) {
-                grounded = true;
-                cancellingGrounded = false;
-                normalVector = normal;
-                CancelInvoke(nameof(StopGrounded));
-            }
-        }
-
-        //Invoke ground/wall cancel, since we can't check normals with CollisionExit
-        float delay = 3f;
-        if (!cancellingGrounded) {
-            cancellingGrounded = true;
-            Invoke(nameof(StopGrounded), Time.deltaTime * delay);
-        }
-    }
-
-    private void StopGrounded() {
-        grounded = false;
-    }
-
-
-
-
 
     // Player Collision
-
     private void OnTriggerEnter(Collider other)
     {
         DeathCanvas.SetActive(true);
