@@ -7,6 +7,8 @@ using UnityEngine.UI;
 public class PlayerMovement : MonoBehaviour {
 
     //Assingables
+    public ParticleSystem splatterParticles;
+    public Gradient particleColorGradient;
     public Transform playerCam;
     public Transform orientation;
 
@@ -20,7 +22,7 @@ public class PlayerMovement : MonoBehaviour {
 
     //Rotation and look
     private float xRotation;
-    private float sensitivity = 20f;
+    private float sensitivity = 10f;
     private float sensMultiplier = 1f;
     
     //Movement
@@ -179,6 +181,7 @@ public class PlayerMovement : MonoBehaviour {
     private void Animate() {
         if(movementInput.magnitude > 0.2) {
             animator.SetBool("isRunning", true);
+            EmitAtLocation();
         }
         else {
             animator.SetBool("isRunning", false);
@@ -400,5 +403,14 @@ public class PlayerMovement : MonoBehaviour {
         {
             UIText.text = "You won!";
         }
+    }
+
+    void EmitAtLocation()
+    {
+        splatterParticles.transform.position = transform.position;
+        splatterParticles.transform.rotation = Quaternion.LookRotation(Vector3.up);
+        ParticleSystem.MainModule psMain = splatterParticles.main;
+        psMain.startColor = particleColorGradient.Evaluate(UnityEngine.Random.Range(0f, 1f));
+        splatterParticles.Emit(1);
     }
 }
