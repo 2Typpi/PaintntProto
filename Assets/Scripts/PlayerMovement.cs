@@ -11,9 +11,6 @@ public class PlayerMovement : MonoBehaviour {
     public Gradient particleColorGradient;
     public Transform playerCam;
     public Transform orientation;
-
-    public GameObject DeathCanvas;
-    public Text UIText;
     public Animator animator;
     
     //Other
@@ -134,6 +131,7 @@ public class PlayerMovement : MonoBehaviour {
         playerActions.PlayerControls.Crouch.performed += crouchContext => crouching = true;
         playerActions.PlayerControls.Crouch.canceled += crouchContext => cancelCrouching = true;
         playerActions.PlayerControls.Restart.performed += restartContext => restart = true;
+        playerActions.MenuControls.Menu.performed += menuContext => PauseMenu.menu = true;
     }
     
     void Start() {
@@ -149,7 +147,7 @@ public class PlayerMovement : MonoBehaviour {
 
     private void Update() {
         MyInput();
-        Look();
+        // Look();
         isGrounded();
         CheckForWall();
         WallrunInput();
@@ -161,6 +159,10 @@ public class PlayerMovement : MonoBehaviour {
             restart = false;
             UnityEngine.SceneManagement.SceneManager.LoadScene(0);
         }
+    }
+
+    private void LateUpdate() {
+        if(!PauseMenu.IsPaused) { Look(); }
     }
 
     /// <summary>
@@ -392,17 +394,6 @@ public class PlayerMovement : MonoBehaviour {
         // Cast a sphere fownwards to detect if there is something underneath the player with layer gorund
         RaycastHit hit;
         grounded = Physics.SphereCast(this.transform.position + col.center, sphereRadius, Vector3.down, out hit, castDistance, whatIsGround);
-    }
-
-    // Player Collision
-    private void OnTriggerEnter(Collider other)
-    {
-        DeathCanvas.SetActive(true);
-        isDead = true;
-        if (other.name == "Win")
-        {
-            UIText.text = "You won!";
-        }
     }
 
     void EmitAtLocation()
