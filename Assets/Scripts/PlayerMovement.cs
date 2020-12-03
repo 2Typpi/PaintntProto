@@ -7,11 +7,10 @@ using UnityEngine.UI;
 public class PlayerMovement : MonoBehaviour {
 
     //Assingables
+    public ParticleSystem splatterParticles;
+    public Gradient particleColorGradient;
     public Transform playerCam;
     public Transform orientation;
-
-    public GameObject DeathCanvas;
-    public Text UIText;
     public Animator animator;
     
     //Other
@@ -20,7 +19,7 @@ public class PlayerMovement : MonoBehaviour {
 
     //Rotation and look
     private float xRotation;
-    private float sensitivity = 20f;
+    private float sensitivity = 10f;
     private float sensMultiplier = 1f;
     
     //Movement
@@ -132,6 +131,7 @@ public class PlayerMovement : MonoBehaviour {
         playerActions.PlayerControls.Crouch.performed += crouchContext => crouching = true;
         playerActions.PlayerControls.Crouch.canceled += crouchContext => cancelCrouching = true;
         playerActions.PlayerControls.Restart.performed += restartContext => restart = true;
+        playerActions.MenuControls.Menu.performed += menuContext => PauseMenu.menu = true;
     }
     
     void Start() {
@@ -147,7 +147,7 @@ public class PlayerMovement : MonoBehaviour {
 
     private void Update() {
         MyInput();
-        Look();
+        // Look();
         isGrounded();
         CheckForWall();
         WallrunInput();
@@ -159,6 +159,10 @@ public class PlayerMovement : MonoBehaviour {
             restart = false;
             UnityEngine.SceneManagement.SceneManager.LoadScene(0);
         }
+    }
+
+    private void LateUpdate() {
+        if(!PauseMenu.IsPaused) { Look(); }
     }
 
     /// <summary>
@@ -179,6 +183,7 @@ public class PlayerMovement : MonoBehaviour {
     private void Animate() {
         if(movementInput.magnitude > 0.2) {
             animator.SetBool("isRunning", true);
+            EmitAtLocation();
         }
         else {
             animator.SetBool("isRunning", false);
@@ -391,14 +396,12 @@ public class PlayerMovement : MonoBehaviour {
         grounded = Physics.SphereCast(this.transform.position + col.center, sphereRadius, Vector3.down, out hit, castDistance, whatIsGround);
     }
 
-    // Player Collision
-    private void OnTriggerEnter(Collider other)
+    void EmitAtLocation()
     {
-        DeathCanvas.SetActive(true);
-        isDead = true;
-        if (other.name == "Win")
-        {
-            UIText.text = "You won!";
-        }
+        splatterParticles.transform.position = transform.position;
+        splatterParticles.transform.rotation = Quaternion.LookRotation(Vector3.up);
+        ParticleSystem.MainModule psMain = splatterParticles.main;
+        psMain.startColor = particleColorGradient.Evaluate(UnityEngine.Random.Range(0f, 1f));
+        splatterParticles.Emit(1);
     }
 }

@@ -5,6 +5,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Utilities;
+using UnityEngine;
+using UnityEngine.InputSystem.UI;
 
 public class @PlayerActions : IInputActionCollection, IDisposable
 {
@@ -179,6 +181,44 @@ public class @PlayerActions : IInputActionCollection, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""MenuControls"",
+            ""id"": ""773e3544-1faf-47bb-b296-be68e0fe646f"",
+            ""actions"": [
+                {
+                    ""name"": ""Menu"",
+                    ""type"": ""Button"",
+                    ""id"": ""84707581-7072-4ef8-abda-f9bdc3165546"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""db1e2c49-1e76-44ff-a46b-11679ff502e2"",
+                    ""path"": ""<Keyboard>/shift"",
+                    ""interactions"": ""Hold"",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Sprint"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""04b2603f-aa32-4b17-85b8-08f1a2031101"",
+                    ""path"": ""<Keyboard>/escape"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Menu"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -191,6 +231,9 @@ public class @PlayerActions : IInputActionCollection, IDisposable
         m_PlayerControls_Sprint = m_PlayerControls.FindAction("Sprint", throwIfNotFound: true);
         m_PlayerControls_Crouch = m_PlayerControls.FindAction("Crouch", throwIfNotFound: true);
         m_PlayerControls_Restart = m_PlayerControls.FindAction("Restart", throwIfNotFound: true);
+        // MenuControls
+        m_MenuControls = asset.FindActionMap("MenuControls", throwIfNotFound: true);
+        m_MenuControls_Menu = m_MenuControls.FindAction("Menu", throwIfNotFound: true);
     }
 
     public void Dispose()
@@ -309,6 +352,39 @@ public class @PlayerActions : IInputActionCollection, IDisposable
         }
     }
     public PlayerControlsActions @PlayerControls => new PlayerControlsActions(this);
+
+    // MenuControls
+    private readonly InputActionMap m_MenuControls;
+    private IMenuControlsActions m_MenuControlsActionsCallbackInterface;
+    private readonly InputAction m_MenuControls_Menu;
+    public struct MenuControlsActions
+    {
+        private @PlayerActions m_Wrapper;
+        public MenuControlsActions(@PlayerActions wrapper) { m_Wrapper = wrapper; }
+        public InputAction @Menu => m_Wrapper.m_MenuControls_Menu;
+        public InputActionMap Get() { return m_Wrapper.m_MenuControls; }
+        public void Enable() { Get().Enable(); }
+        public void Disable() { Get().Disable(); }
+        public bool enabled => Get().enabled;
+        public static implicit operator InputActionMap(MenuControlsActions set) { return set.Get(); }
+        public void SetCallbacks(IMenuControlsActions instance)
+        {
+            if (m_Wrapper.m_MenuControlsActionsCallbackInterface != null)
+            {
+                @Menu.started -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnMenu;
+                @Menu.performed -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnMenu;
+                @Menu.canceled -= m_Wrapper.m_MenuControlsActionsCallbackInterface.OnMenu;
+            }
+            m_Wrapper.m_MenuControlsActionsCallbackInterface = instance;
+            if (instance != null)
+            {
+                @Menu.started += instance.OnMenu;
+                @Menu.performed += instance.OnMenu;
+                @Menu.canceled += instance.OnMenu;
+            }
+        }
+    }
+    public MenuControlsActions @MenuControls => new MenuControlsActions(this);
     public interface IPlayerControlsActions
     {
         void OnMovement(InputAction.CallbackContext context);
@@ -317,5 +393,9 @@ public class @PlayerActions : IInputActionCollection, IDisposable
         void OnSprint(InputAction.CallbackContext context);
         void OnCrouch(InputAction.CallbackContext context);
         void OnRestart(InputAction.CallbackContext context);
+    }
+    public interface IMenuControlsActions
+    {
+        void OnMenu(InputAction.CallbackContext context);
     }
 }
